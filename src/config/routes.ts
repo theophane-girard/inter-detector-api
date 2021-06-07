@@ -8,7 +8,9 @@ export class Routes {
     app.route("/players")
       .get(this.playerController.index)
       .post(this.playerController.create);
-    app.route("/summoner/:name")
-      .get(this.playerController.getSummoner)
+    app.route("/summoners/:name")
+      .get(this.playerController.getSummonerByName)
+    app.route("/summoners")
+      .get(this.playerController.getSummonerByName)
   }
 }
