@@ -3,30 +3,20 @@ import { CONFIG } from "../config/config";
 import { catchError, concatMap, map, switchMap } from "rxjs/operators";
 import { from } from 'rxjs';
 import { RiotGames } from "../types/riot-games/riot-games";
-// import axios = require('axios')
-// var http = axios.default
 import Axios from  'axios-observable';
-import * as dotenv from "dotenv";
-dotenv.config({ path: '../.env' })
-import fetch from 'cross-fetch';
-import * as http from "https";
-import { IncomingMessage } from 'http';
+import { AxiosRequestConfig } from 'axios';
 
 
 export class MatchesService {
   private matches: RiotGames.Match.MatchDetail[] = []
   public matches$: Subject<RiotGames.Match.MatchDetail[]> = new Subject()
   private api = Axios.create({
-    // baseURL: CONFIG.apiUrl,
+    baseURL: CONFIG.apiUrl,
     headers: {
-      'X-Riot-Token': process.env.RIOT_APi_KEY,
+      'X-Riot-Token': process.env.RIOT_API_KEY,
       'Content-Type': 'application/json',
     }
   });
-
-  // constructor(private http: HttpClient) {
-    
-  // }
 
   // updateMatchesToCSV(matchAmount: number) {
   //   let matchesRequest$: Observable<any>[] = []
@@ -39,21 +29,23 @@ export class MatchesService {
   //   ).subscribe((matches: RiotGames.Match.MatchDetail[]) => this.addMatch(matches))
   // }
 
-  getLastMatchIdList(start: number, count: number, account: any) : Observable<RiotGames.MatchList.MatchList> {
+  getLastMatchIdList(start: number, count: number, id: string) : Observable<RiotGames.MatchList.MatchList> {
 
-    let url = CONFIG.apiUrlMatchesByAccountId 
-      + account.accountId
-      return Axios.get(encodeURI(url), {
-        headers: {
-          'content-type': 'application/json;charset=UTF-8',
-          'X-Riot-Token': process.env.RIOT_APi_KEY ? process.env.RIOT_APi_KEY : '',
-        },
-        data: {
-          'endIndex': count,
-          'beginIndex': start,
-          'queue': CONFIG.rankedQueueId
-        }
-      }).pipe(map(response => response.data))
+    let url = encodeURI(CONFIG.apiUrlMatchesByAccountId + id)
+    let options: AxiosRequestConfig = {
+      headers: {
+        'content-type': 'application/json;charset=UTF-8',
+        'X-Riot-Token': process.env.RIOT_API_KEY ? process.env.RIOT_API_KEY : '',
+      },
+      params: {
+        'endIndex': count,
+        'beginIndex': start,
+        'queue': CONFIG.rankedQueueId
+      }
+    }
+    console.log('http request', url,options);
+    
+    return this.api.get(url, options).pipe(map(response => response.data))
   }
 
   // getMatchListByChampId(id: number, account: any) {
@@ -67,42 +59,37 @@ export class MatchesService {
   //   return this.http.get<RiotGames.MatchList.MatchList>(url, { params: param })
   // }
 
-  getMatchById(id: number) : Observable<RiotGames.Match.MatchDetail> {
-    let url = CONFIG.apiUrlMatchesById + id
-    return Axios.get(encodeURI(url), {
+  getMatchById(id: any) : Observable<RiotGames.Match.MatchDetail> {
+    let url = encodeURI(CONFIG.apiUrlMatchesById + id)
+    return this.api.get(url, {
       headers: {
         'content-type': 'application/json;charset=UTF-8',
-        'X-Riot-Token': process.env.RIOT_APi_KEY ? process.env.RIOT_APi_KEY : '',
+        'X-Riot-Token': process.env.RIOT_API_KEY ? process.env.RIOT_API_KEY : '',
       }
     }).pipe(map(response => response.data))
   }
 
   getSummoner(summonerName: string) {
-    let url = CONFIG.apiUrl + CONFIG.apiUrlGetSummoner + summonerName
-    return Axios.get(encodeURI(url), {
+    let url = encodeURI(CONFIG.apiUrlGetSummoner + summonerName)
+    let options = {
       headers: {
         'content-type': 'application/json;charset=UTF-8',
-        'X-Riot-Token': process.env.RIOT_APi_KEY ? process.env.RIOT_APi_KEY : '',
+        'X-Riot-Token': process.env.RIOT_API_KEY ? process.env.RIOT_API_KEY : '',
       }
-    }).pipe(map(response => response.data))
+    }
+    
+    console.log(['http request', url,options]);
+    return this.api.get(url, options).pipe(map(response => response.data))
   }
 
   getSummonerLeague(id: string) : Observable<RiotGames.League.LeagueDto[]> {
-    let url = CONFIG.apiUrlGetSummonerLeague + id
-    return Axios.get(encodeURI(url), {
+    let url = encodeURI(CONFIG.apiUrlGetSummonerLeague + id)
+    
+    return this.api.get(url, {
       headers: {
         'content-type': 'application/json;charset=UTF-8',
-        'X-Riot-Token': process.env.RIOT_APi_KEY ? process.env.RIOT_APi_KEY : '',
+        'X-Riot-Token': process.env.RIOT_API_KEY ? process.env.RIOT_API_KEY : '',
       }
     }).pipe(map(response => response.data))
-  }
-
-  addMatch(matches: RiotGames.Match.MatchDetail[]) {
-    this.matches = matches
-    this.notifyMatchesChanged()
-  }
-  
-  notifyMatchesChanged() {
-    this.matches$.next(this.matches.slice()) 
   }
 }

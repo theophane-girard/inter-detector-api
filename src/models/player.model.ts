@@ -6,7 +6,7 @@ import { CONFIG } from "../config/config";
 import { Match } from "./match.model";
 import { Label } from "../models/label.model";
 
-export class Player extends Model implements RiotGames.Summoner.SummonerDto {
+export class Player implements RiotGames.Summoner.SummonerDto {
   public accountId!: string
   public profileIconId!: number
   public revisionDate!: number
@@ -40,11 +40,18 @@ export class Player extends Model implements RiotGames.Summoner.SummonerDto {
       if (this.league.length === 0) {
         return -1
       }
+
+      if (!rankedSoloLeague) {
+        return -1
+      }
       return rankedSoloLeague.wins
     }
   
     getLosses() : number {
       if (this.league.length === 0) {
+        return -1
+      }
+      if (!this.getSoloRankedLeague()) {
         return -1
       }
       return this.getSoloRankedLeague().losses
@@ -75,7 +82,8 @@ export class Player extends Model implements RiotGames.Summoner.SummonerDto {
       let p: Player = new Player()
       for (let property in player) {
         if (player.hasOwnProperty(property)) {
-          p.setDataValue(property, player[property])
+          p[property] = player[property]
+          // p.setDataValue(property, player[property])
         }
       }
   
@@ -159,22 +167,49 @@ export interface PlayerInterface {
   name: string;
 }
 
-Player.init(
-  {
-    id: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    name: {
-      type: new DataTypes.STRING(128),
-      allowNull: false,
-    },
-  },
-  {
-    tableName: "players",
-    sequelize: database, // this bit is important
-  }
-);
-
-Player.sync({ force: true }).then(() => console.log("Player table created"));
+// Player.init(
+//   {
+//     id: {
+//       type: DataTypes.INTEGER.UNSIGNED,
+//       autoIncrement: true,
+//       primaryKey: true,
+//     },
+//     name: {
+//       type: new DataTypes.STRING(128),
+//       allowNull: false,
+//     },
+//     accountId:{ 
+//       type: DataTypes.STRING
+//     },
+//     profileIconId:{ 
+//       type: DataTypes.STRING
+//     },
+//     revisionDate:{ 
+//       type: DataTypes.STRING
+//     },
+//     puuid:{ 
+//       type: DataTypes.STRING
+//     },
+//     summonerLevel:{ 
+//       type: DataTypes.STRING
+//     },
+//     winrate:{ 
+//       type: DataTypes.STRING
+//     },
+//     // league:{ 
+//     //   type: DataTypes.STRING
+//     //   .League.LeagueDto[]},
+//     // labels:{ 
+//     //   type: DataTypes.STRING
+//     //   []},
+//   },
+//   {
+//     tableName: "players",
+//     sequelize: database, // this bit is important
+//   }
+// );
+// Player.hasMany(Match, {
+//   sourceKey: 'id',
+//   foreignKey: 'playerd'
+// })
+// Player.sync({ force: true }).then(() => console.log("Player table created"));

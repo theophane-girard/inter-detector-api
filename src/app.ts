@@ -2,7 +2,6 @@ import express = require("express");
 import * as bodyParser from "body-parser";
 import { Routes } from "./config/routes";
 import cors from "cors"
-require('dotenv').config()
 class App {
   public app: express.Application;
   public routePrv: Routes = new Routes();

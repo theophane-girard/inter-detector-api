@@ -1,8 +1,9 @@
-import { Model } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import { CONFIG } from "../config/config";
+import { database } from "../config/database";
 import { RiotGames } from "../types/riot-games/riot-games";
 
-export class Match extends Model implements RiotGames.Match.MatchDetail {
+export class Match implements RiotGames.Match.MatchDetail {
   public mapId!: number;
   public gameCreation!: number;
   public gameId!: number;
@@ -28,7 +29,8 @@ export class Match extends Model implements RiotGames.Match.MatchDetail {
     let p = new Match()
     for (let property in match) {
       if (match.hasOwnProperty(property)) {
-        p.setDataValue(property, match[property])
+        // p.setDataValue(property, match[property])
+        p[property] = match[property]
       }
     }
 
@@ -73,3 +75,62 @@ export class Match extends Model implements RiotGames.Match.MatchDetail {
     return participant.stats.objectivePlayerScore
   }
 }
+
+// Match.init({
+//   gameId: {
+//     type: DataTypes.INTEGER,
+//     autoIncrement: false,
+//     primaryKey: true,
+//   },
+//   mapId: {
+//     type: DataTypes.INTEGER
+//   },
+//   gameCreation: {
+//     type: DataTypes.INTEGER
+//   },
+//   gameMode: {
+//     type: DataTypes.STRING
+//   },
+//   gameType: {
+//     type: DataTypes.INTEGER
+//   },
+//   matchVersion: {
+//     type: DataTypes.STRING
+//   },
+//   platformId: {
+//     type: DataTypes.INTEGER
+//   },
+//   region: {
+//     type: DataTypes.STRING
+//   },
+//   seasonId: {
+//     type: DataTypes.INTEGER
+//   },
+//   queueId: {
+//     type: DataTypes.INTEGER
+//   },
+//   gameDuration: {
+//     type: DataTypes.INTEGER
+//   },
+//   gameVersion: {
+//     type: DataTypes.INTEGER
+//   },
+//   role: {
+//     type: DataTypes.INTEGER
+//   },
+//   champion: {
+//     type: DataTypes.INTEGER
+//   },
+//   lane: {
+//     type: DataTypes.STRING
+//   },
+//   playerId: {
+//     type: DataTypes.STRING
+//   }
+// },
+// {
+//   tableName: "matches",
+//   sequelize: database,
+// })
+
+// Match.sync({ force: true }).then(() => console.log("Match table created"));
