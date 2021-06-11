@@ -39,59 +39,30 @@ export class PlayerController {
     if (req.body.length === 0) {
       return res.status(500).json({})
     }
-    try {
-      req.body.forEach((name: string) => {
-        let currentSummoner: Player
-        let currentMatches: any
-        let matchesRequest$: Observable<any>[] = []
-        let playerRequest$ = m.getSummoner(name).pipe(
-          tap((summoner: RiotGames.Summoner.SummonerDto) => currentSummoner = Player.factory(summoner)),
-          switchMap(() => m.getSummonerLeague(currentSummoner.id)),
-          tap((league: RiotGames.League.LeagueDto[]) => currentSummoner.league = league),
-          switchMap(() => of(currentSummoner)),
-          switchMap((summoner: RiotGames.Summoner.SummonerDto) => m.getLastMatchIdList(CONFIG.matchStartIndex, +(process.env.MATCH_AMOUNT || 0), summoner.accountId)),
-          tap((matches: RiotGames.MatchList.MatchList) => currentMatches = matches.matches),
-          pluck('matches'),
-          mergeMap((match: RiotGames.MatchList.MatchReference[]) => match),
-          map((match: RiotGames.MatchList.MatchReference) => {
-            matchesRequest$.push(m.getMatchById(match.gameId));
-            return of({})
-          }),
-          switchMap(() => forkJoin(matchesRequest$)),
-          // map((matches: RiotGames.Match.MatchDetail[]) => this.addToRankedData(matches, currentSummoner, currentMatches, players))
-          map((matches: RiotGames.Match.MatchDetail[]) => {
-            if (players.every(player => player.id !== currentSummoner.id)) {
-              players.push(currentSummoner)
-            }
-            let player: Player = players.find(p => p.id === currentSummoner.id)!
-            if (!player.matches) {
-              player.matches = []
-            }
-            matches.map(match => {
-              let m = Match.factory(match)
-              let mappingMatch = currentMatches.find(pMatch => pMatch.gameId === match.gameId)
-              m.role = mappingMatch.role
-              m.champion = mappingMatch.champion
-              m.lane = mappingMatch.lane
-              player.matches.push(m)
-            })
-          })
-        )
-        playerResquests.push(playerRequest$)
-      })
-  
-      // forkJoin(playerResquests).subscribe((data) => this.formatPlayers(players, res))
-      forkJoin(playerResquests).subscribe((data) => {
-        players = players.map((player: Player) => {
-          player.winrate = Math.round((100 * player.getWins()) / (player.getWins() + player.getLosses()) * 10) / 10
-          // player.labels = this.setPlayerLabels(player)
-          return player
-        })
-        return res.status(200).json(players)
-      })
-    } catch (error) {
-      return res.status(500).json(error)
-    }
+    req.body.forEach((name: string) => {
+      let currentSummoner: Player
+      let currentMatches: any
+      let matchesRequest$: Observable<any>[] = []
+      let playerRequest$ = m.getSummoner(name).pipe(
+        tap((summoner: RiotGames.Summoner.SummonerDto) => currentSummoner = Player.factory(summoner)),
+        switchMap(() => m.getSummonerLeague(currentSummoner.id)),
+        tap((league: RiotGames.League.LeagueDto[]) => currentSummoner.league = league),
+        switchMap(() => of(currentSummoner)),
+        switchMap((summoner: RiotGames.Summoner.SummonerDto) => m.getLastMatchIdList(CONFIG.matchStartIndex, +(process.env.MATCH_AMOUNT || 0), summoner.accountId)),
+        tap((matches: RiotGames.MatchList.MatchList) => currentMatches = matches.matches),
+        pluck('matches'),
+        mergeMap((match: RiotGames.MatchList.MatchReference[]) => match),
+        map((match: RiotGames.MatchList.MatchReference) => matchesRequest$.push(m.getMatchById(match.gameId))),
+        switchMap((data) => forkJoin(matchesRequest$)),
+        map((matches: RiotGames.Match.MatchDetail[]) => this.addToRankedData(matches, currentSummoner, currentMatches, players))
+      )
+      playerResquests.push(playerRequest$)
+    })
+
+    forkJoin(playerResquests).subscribe(
+      () => this.formatPlayers(players, res),
+      err => res.status(500).json(err)
+    )
   }
 
   getMatchesFromMatchRef(matches: any): Observable<RiotGames.MatchList.MatchReference> {

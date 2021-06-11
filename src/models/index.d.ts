@@ -1,5 +1,5 @@
 import * as sequelize from "sequelize";
-import { PlayerFactory } from "./player.model";
+// import { PlayerFactory } from "./player.model";
 import { database } from "../config/database";
 
 // SOMETHING VERY IMPORTANT them Factory functions expect a

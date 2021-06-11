@@ -11,7 +11,7 @@ export class Routes {
     app.route("/summoners/:name")
       .get(this.playerController.getSummonerByName)
     app.route("/summoners")
-      .get(this.playerController.getSummoners)
+      .get(this.playerController.getSummoners.bind(this.playerController))
     app.route("/summoners/leagues/:id")
       .get(this.playerController.getSummonerLeague)
     app.route("/summoners/lastMatchRef/:id")
