@@ -8,8 +8,6 @@ import { AxiosRequestConfig } from 'axios';
 
 
 export class MatchesService {
-  private matches: RiotGames.Match.MatchDetail[] = []
-  public matches$: Subject<RiotGames.Match.MatchDetail[]> = new Subject()
   private api = Axios.create({
     baseURL: CONFIG.apiUrl,
     headers: {
@@ -33,18 +31,12 @@ export class MatchesService {
 
     let url = encodeURI(CONFIG.apiUrlMatchesByAccountId + id)
     let options: AxiosRequestConfig = {
-      headers: {
-        'content-type': 'application/json;charset=UTF-8',
-        'X-Riot-Token': process.env.RIOT_API_KEY ? process.env.RIOT_API_KEY : '',
-      },
       params: {
         'endIndex': count,
         'beginIndex': start,
         'queue': CONFIG.rankedQueueId
       }
-    }
-    console.log('http request', url,options);
-    
+    }    
     return this.api.get(url, options).pipe(map(response => response.data))
   }
 
@@ -61,35 +53,16 @@ export class MatchesService {
 
   getMatchById(id: any) : Observable<RiotGames.Match.MatchDetail> {
     let url = encodeURI(CONFIG.apiUrlMatchesById + id)
-    return this.api.get(url, {
-      headers: {
-        'content-type': 'application/json;charset=UTF-8',
-        'X-Riot-Token': process.env.RIOT_API_KEY ? process.env.RIOT_API_KEY : '',
-      }
-    }).pipe(map(response => response.data))
+    return this.api.get(url).pipe(map(response => response.data))
   }
 
   getSummoner(summonerName: string) {
     let url = encodeURI(CONFIG.apiUrlGetSummoner + summonerName)
-    let options = {
-      headers: {
-        'content-type': 'application/json;charset=UTF-8',
-        'X-Riot-Token': process.env.RIOT_API_KEY ? process.env.RIOT_API_KEY : '',
-      }
-    }
-    
-    console.log(['http request', url,options]);
-    return this.api.get(url, options).pipe(map(response => response.data))
+    return this.api.get(url).pipe(map(response => response.data))
   }
 
   getSummonerLeague(id: string) : Observable<RiotGames.League.LeagueDto[]> {
     let url = encodeURI(CONFIG.apiUrlGetSummonerLeague + id)
-    
-    return this.api.get(url, {
-      headers: {
-        'content-type': 'application/json;charset=UTF-8',
-        'X-Riot-Token': process.env.RIOT_API_KEY ? process.env.RIOT_API_KEY : '',
-      }
-    }).pipe(map(response => response.data))
+    return this.api.get(url).pipe(map(response => response.data))
   }
 }
