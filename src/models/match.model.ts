@@ -25,7 +25,9 @@ export class Match implements RiotGames.Match.MatchDetail {
   public champion!: number
   public lane!: string
   public summonerId!: string
-  
+  public win!: boolean
+  public kda!: string
+
   static factory(match: any) : Match {
     let p = new Match()
     for (let property in match) {

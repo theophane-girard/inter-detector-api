@@ -18,7 +18,14 @@ export class MatchesService {
 
   constructor() {
     this.api.interceptors.response.use(
-      (response) => response, 
+      (response) => response,
+      (error) => Promise.reject(error.response.data || error)
+    );
+    this.api.interceptors.request.use(
+      (request) => {
+        console.log(request);
+        return request
+      },
       (error) => Promise.reject(error.response.data || error)
     );
   }

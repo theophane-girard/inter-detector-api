@@ -53,8 +53,6 @@ export class PlayerController {
     }
 
     req.body.names.forEach((name: string) => {
-      let currentSummoner: Player
-      let currentMatches: any
       let playerRequest$ = this.matchService.getSummoner(name).pipe(
         switchMap((summoner: RiotGames.Summoner.SummonerDto) => of(players.push(Player.factory(summoner)))),
         catchError(err => of(err))
@@ -62,7 +60,7 @@ export class PlayerController {
       playerResquests.push(playerRequest$)
     })
 
-    let matchRequest$ = forkJoin(playerResquests).pipe(
+    forkJoin(playerResquests).pipe(
       mergeMap((summoners: any[]) => players),
       map((summoner: RiotGames.Summoner.SummonerDto) => matchRefAndLeagueRequest$.push(
         this.matchService.getSummonerLeague(summoner.id), 
@@ -167,6 +165,8 @@ export class PlayerController {
       if (!player.matches) {
         player.matches = []
       }
+      match.win = match.getMatchResult(player.name)
+      match.kda = match.getKDA(player.name)
       player.matches.push(match)
     });
   }
@@ -182,7 +182,7 @@ export class PlayerController {
     }))
   }
 
-  appendStatsDataToplayers(matches, players) {
+  appendStatsDataToplayers(matches, players: Player[]) {
     players.forEach(player => {
       player.kda = player.getAverageKda()
       player.kdaRate = player.getAverageKdaRate()

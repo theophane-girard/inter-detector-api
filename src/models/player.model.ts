@@ -108,7 +108,8 @@ export class Player implements RiotGames.Summoner.SummonerDto {
     }
     
     getAverageKdaRate(): number {
-      return Math.round(100 * (this.getAverageByIndex('kills') + this.getAverageByIndex('assists')) / this.getAverageByIndex('deaths')) / 100
+      let deaths = this.getAverageByIndex('deaths') === 0 ? 1 : this.getAverageByIndex('deaths')
+      return Math.round(100 * (this.getAverageByIndex('kills') + this.getAverageByIndex('assists')) / deaths) / 100
     }
   
     getAverageByIndex(index: string) : number {
