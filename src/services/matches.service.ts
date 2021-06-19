@@ -5,13 +5,13 @@ import { from } from 'rxjs';
 import { RiotGames } from "../types/riot-games/riot-games";
 import Axios from 'axios-observable';
 import { AxiosRequestConfig } from 'axios';
-
+import * as functions from "firebase-functions";
 
 export class MatchesService {
   private api = Axios.create({
     baseURL: CONFIG.apiUrl,
     headers: {
-      'X-Riot-Token': process.env.RIOT_API_KEY,
+      'X-Riot-Token': process.env.RIOT_API_KEY ? process.env.RIOT_API_KEY : functions.config().riot_games.api_key,
       'Content-Type': 'application/json',
     }
   });

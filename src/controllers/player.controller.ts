@@ -7,9 +7,11 @@ import { Match } from "../models/match.model";
 import { Player, PlayerInterface } from "../models/player.model";
 import { MatchesService } from "../services/matches.service";
 import { RiotGames } from "../types/riot-games/riot-games";
+import * as functions from "firebase-functions";
 
 export class PlayerController {
 
+  private matchAmount = process.env.MATCH_AMOUNT ? +process.env.MATCH_AMOUNT : functions.config().riot_games.match_amount
   /**
    *
    */
@@ -118,7 +120,7 @@ export class PlayerController {
   }
 
   getLastMatchRefList(req: Request, res: Response) {
-    let matchAmount = process.env.MATCH_AMOUNT ? +process.env.MATCH_AMOUNT : 0
+    let matchAmount = this.matchAmount ? +this.matchAmount : 0
     return this.matchService.getLastMatchIdList(CONFIG.matchStartIndex, matchAmount, req.params.id).subscribe(
       player => res.status(200).json(player),
       error => res.status(500).json(error)
@@ -135,7 +137,7 @@ export class PlayerController {
   getObsMatchBySum(summoner: RiotGames.Summoner.SummonerDto, obsArray$: Observable<any>[]) {
     return this.matchService.getLastMatchIdList(
       CONFIG.matchStartIndex, 
-      +(process.env.MATCH_AMOUNT || 0), 
+      +(this.matchAmount || 0), 
       summoner.accountId
     ).pipe(
       pluck('matches'),
