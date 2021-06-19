@@ -16,7 +16,8 @@ class App {
   private config(): void {
     const allowedOrigins = [
       'http://localhost:5000',
-      'http://localhost:4200'
+      'http://localhost:4200',
+      'https://inter-detector.web.app'
     ];
 
     const options: cors.CorsOptions = {
