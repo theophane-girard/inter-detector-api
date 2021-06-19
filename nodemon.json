@@ -10,6 +10,5 @@
     "PORT": "5000"
   },
   "args": [
-    "--require dotenv/config"
   ]
 }

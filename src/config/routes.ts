@@ -1,22 +1,26 @@
-import { Application, Request, Response } from "express";
+import { Application } from "express";
 import { PlayerController } from "../controllers/player.controller";
+import { MatchesService } from "../services/matches.service";
 
 export class Routes {
-  public playerController: PlayerController = new PlayerController();
+  public m = new MatchesService()
+  public playerController: PlayerController = new PlayerController(this.m);
 
   public routes(app: Application): void {
     app.route("/players")
       .get(this.playerController.index)
       .post(this.playerController.create);
     app.route("/summoners/:name")
-      .get(this.playerController.getSummonerByName)
+      .get(this.playerController.getSummonerByName.bind(this.playerController))
     app.route("/summoners")
-      .get(this.playerController.getSummoners.bind(this.playerController))
+      .post(this.playerController.getSummoners.bind(this.playerController))
     app.route("/summoners/leagues/:id")
-      .get(this.playerController.getSummonerLeague)
-    app.route("/summoners/lastMatchRef/:id")
-      .get(this.playerController.getLastMatchRefList)
-    app.route("/summoners/match/:id")
-      .get(this.playerController.getMatchById)
+      .get(this.playerController.getSummonerLeague.bind(this.playerController))
+    app.route("/summoners/matches/ref/:id")
+      .get(this.playerController.getLastMatchRefList.bind(this.playerController))
+    app.route("/summoners/matches/:id")
+      .get(this.playerController.getMatchById.bind(this.playerController))
+    app.route("/summoners/matches/csv/:id")
+      .get(this.playerController.getMatchById.bind(this.playerController))
   }
 }

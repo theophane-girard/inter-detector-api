@@ -58,12 +58,28 @@ export const CONFIG: any = {
   maxQuiteCarryKda: 3.5,
   minHyperCarryKda: 3.5,
   label: {
-    inter: 'INTER',
-    troll: 'TROLL',
-    newAccount: 'New account',
-    hyperCarry: 'HYPER CARRY',
-    carry: 'Carry',
+    inter: {
+      name: 'INTER',
+      class: 'inter'
+    },
+    troll: {
+      name: 'TROLL',
+      class: 'troll'
+    },
+    newAccount: {
+      name: 'New account',
+      class: 'newAccount'
+    },
+    hyperCarry: {
+      name: 'HYPER CARRY',
+      class: 'hyperCarry'
+    },
+    carry: {
+      name: 'Carry',
+      class: 'carry'
+    },
   },
   newAccountValue: 100,
-  unrankedLabel: 'unranked'
+  unrankedLabel: 'unranked',
+  rankedLabel: 'RANKED_SOLO_5x5'
 }

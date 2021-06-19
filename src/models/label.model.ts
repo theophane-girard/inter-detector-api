@@ -1,9 +1,17 @@
-import { DataTypes, Model } from "sequelize/types"
+import { CONFIG } from "../config/config"
 import { database } from "../config/database"
 
-export class Label extends Model {
-  id!: number
-  name!: string
+export class Label {
+  // public id!: number
+  public name!: string
+  public className!: string
+
+  static factory(str: string) {
+    return {
+      name: CONFIG.label[str].name,
+      className: CONFIG.label[str].class
+    }
+  }
 }
 
 // export interface PlayerAttributes {
@@ -44,25 +52,26 @@ export class Label extends Model {
 // }
 
 // export const PlayerFactDb = PlayerFactory(database);
-export interface LabelInterface {
-  name: string;
-}
+// export interface LabelInterface {
+//   name: string;
+// }
+// console.log('test')
 
-Label.init(
-  {
-    id: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    name: {
-      type: new DataTypes.STRING(128),
-      allowNull: false,
-    }
-  },
-  {
-    tableName: "labels",
-    sequelize: database,
-  }
-);
-Label.sync({ force: true }).then(() => console.log("Label table created"));
+// Label.init(
+//   {
+//     id: {
+//       type: DataTypes.INTEGER.UNSIGNED,
+//       autoIncrement: true,
+//       primaryKey: true,
+//     },
+//     name: {
+//       type: new DataTypes.STRING(128),
+//       allowNull: false,
+//     }
+//   },
+//   {
+//     tableName: "labels",
+//     sequelize: database,
+//   }
+// );
+// Label.sync({ force: true }).then(() => console.log("Label table created"))

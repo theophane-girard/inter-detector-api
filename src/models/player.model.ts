@@ -5,6 +5,7 @@ import { RiotGames } from "../types/riot-games/riot-games";
 import { CONFIG } from "../config/config";
 import { Match } from "./match.model";
 import { Label } from "../models/label.model";
+import { League } from "./league.model";
 
 export class Player implements RiotGames.Summoner.SummonerDto {
   public accountId!: string
@@ -18,9 +19,20 @@ export class Player implements RiotGames.Summoner.SummonerDto {
   public matches!: Match[]
   public league!: RiotGames.League.LeagueDto[]
   public labels!: Label[]
+  public kda!: string
+  public kdaRate!: number
+  public wins!: number
+  public losses!: number
+  public rank!: string
+  public tier!: string
   
     getSoloRankedLeague() : RiotGames.League.LeagueDto {
-      return this.league.find(l => l.queueType === CONFIG.unrankedLabel)!
+      let league = this.league.find(l => l.queueType === CONFIG.unrankedLabel)
+
+      if (league) {
+        return League.factory(CONFIG.unrankedLabel)
+      }
+      return this.league.find(l => l.queueType === CONFIG.rankedLabel)!
     }
   
     getValue(index: string) : any {
@@ -75,6 +87,7 @@ export class Player implements RiotGames.Summoner.SummonerDto {
       if (this.league.length === 0) {
         return CONFIG.unrankedLabel
       }
+
       return CoreService.capitalize(this.getSoloRankedLeague().tier) + ' ' + this.getSoloRankedLeague().rank
     }
   
@@ -95,7 +108,7 @@ export class Player implements RiotGames.Summoner.SummonerDto {
     }
     
     getAverageKdaRate(): number {
-      return (this.getAverageByIndex('kills') + this.getAverageByIndex('assists')) / this.getAverageByIndex('deaths')
+      return Math.round(100 * (this.getAverageByIndex('kills') + this.getAverageByIndex('assists')) / this.getAverageByIndex('deaths')) / 100
     }
   
     getAverageByIndex(index: string) : number {

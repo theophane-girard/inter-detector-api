@@ -3,7 +3,7 @@ import { CONFIG } from "../config/config";
 import { catchError, concatMap, map, switchMap } from "rxjs/operators";
 import { from } from 'rxjs';
 import { RiotGames } from "../types/riot-games/riot-games";
-import Axios from  'axios-observable';
+import Axios from 'axios-observable';
 import { AxiosRequestConfig } from 'axios';
 
 
@@ -16,6 +16,13 @@ export class MatchesService {
     }
   });
 
+  constructor() {
+    this.api.interceptors.response.use(
+      (response) => response, 
+      (error) => Promise.reject(error.response.data || error)
+    );
+  }
+
   // updateMatchesToCSV(matchAmount: number) {
   //   let matchesRequest$: Observable<any>[] = []
   //   let summonerName = process.env.SUMMONER_NAME ? process.env.SUMMONER_NAME : ''
@@ -27,7 +34,7 @@ export class MatchesService {
   //   ).subscribe((matches: RiotGames.Match.MatchDetail[]) => this.addMatch(matches))
   // }
 
-  getLastMatchIdList(start: number, count: number, id: string) : Observable<RiotGames.MatchList.MatchList> {
+  getLastMatchIdList(start: number, count: number, id: string): Observable<RiotGames.MatchList.MatchList> {
 
     let url = encodeURI(CONFIG.apiUrlMatchesByAccountId + id)
     let options: AxiosRequestConfig = {
@@ -36,7 +43,7 @@ export class MatchesService {
         'beginIndex': start,
         'queue': CONFIG.rankedQueueId
       }
-    }    
+    }
     return this.api.get(url, options).pipe(map(response => response.data))
   }
 
@@ -51,7 +58,7 @@ export class MatchesService {
   //   return this.http.get<RiotGames.MatchList.MatchList>(url, { params: param })
   // }
 
-  getMatchById(id: any) : Observable<RiotGames.Match.MatchDetail> {
+  getMatchById(id: any): Observable<RiotGames.Match.MatchDetail> {
     let url = encodeURI(CONFIG.apiUrlMatchesById + id)
     return this.api.get(url).pipe(map(response => response.data))
   }
@@ -61,7 +68,7 @@ export class MatchesService {
     return this.api.get(url).pipe(map(response => response.data))
   }
 
-  getSummonerLeague(id: string) : Observable<RiotGames.League.LeagueDto[]> {
+  getSummonerLeague(id: string): Observable<RiotGames.League.LeagueDto[]> {
     let url = encodeURI(CONFIG.apiUrlGetSummonerLeague + id)
     return this.api.get(url).pipe(map(response => response.data))
   }

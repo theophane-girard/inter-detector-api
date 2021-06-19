@@ -24,6 +24,7 @@ export class Match implements RiotGames.Match.MatchDetail {
   public role!: string
   public champion!: number
   public lane!: string
+  public summonerId!: string
   
   static factory(match: any) : Match {
     let p = new Match()

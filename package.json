@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "ts-node ./src/server.ts",
-    "start": "nodemon -r dotenv/config",
+    "start": "nodemon",
     "prod": "npm run build && npm run start",
     "config": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" ./src/config.index.ts"
   },

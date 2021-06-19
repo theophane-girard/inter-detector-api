@@ -15,7 +15,7 @@ module.exports = {
       {
         name: 'hyperCarry'
       },
-    ], {})
+    ], {});
   },
 
   down: (queryInterface, Sequelize) => {
