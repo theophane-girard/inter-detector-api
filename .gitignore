@@ -2,7 +2,3 @@ node_modules
 src/config/credentials.ts
 .env
 lol.db
-dist
-*.js
-functions/.runtimeconfig.json
-firebase-debug.log

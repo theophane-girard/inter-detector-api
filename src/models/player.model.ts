@@ -121,7 +121,7 @@ export class Player implements RiotGames.Summoner.SummonerDto {
         }
       })
   
-      average = Math.round((average / this.matches.length) * 10 ) /10
+      average = Math.round((average / +(process.env.MATCH_AMOUNT || 1)) * 10 ) /10
       return average
     }
   
