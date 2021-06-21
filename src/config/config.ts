@@ -81,5 +81,9 @@ export const CONFIG: any = {
   },
   newAccountValue: 100,
   unrankedLabel: 'unranked',
-  rankedLabel: 'RANKED_SOLO_5x5'
+  rankedLabel: 'RANKED_SOLO_5x5',
+  badRequestMessage: {
+    status: 500,
+    msg: 'Bad request'
+  }
 }

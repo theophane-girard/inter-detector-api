@@ -1,12 +1,16 @@
 import { Application } from "express";
+import { CoreController } from "../controllers/core.controller";
 import { PlayerController } from "../controllers/player.controller";
 import { MatchesService } from "../services/matches.service";
 
 export class Routes {
   public m = new MatchesService()
   public playerController: PlayerController = new PlayerController(this.m);
+  public coreController: CoreController = new CoreController();
 
   public routes(app: Application): void {
+    app.route("/playload")
+      .post(this.coreController.onDeployEvent.bind(this.coreController));
     app.route("/players")
       .get(this.playerController.index)
       .post(this.playerController.create);
@@ -20,7 +24,7 @@ export class Routes {
       .get(this.playerController.getLastMatchRefList.bind(this.playerController))
     app.route("/summoners/matches/:id")
       .get(this.playerController.getMatchById.bind(this.playerController))
-    app.route("/summoners/matches/csv/:id")
-      .get(this.playerController.getMatchById.bind(this.playerController))
+    app.route("/summoners/matches/csv")
+      .post(this.playerController.getMatchesToCSV.bind(this.playerController))
   }
 }

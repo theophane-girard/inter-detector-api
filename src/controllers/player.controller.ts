@@ -3,6 +3,7 @@ import { combineLatest, forkJoin, from, iif, Observable, of } from "rxjs";
 import { map, mergeMap, switchMap, tap, pluck, catchError } from "rxjs/operators";
 import { CONFIG } from "../config/config";
 import { Label } from "../models/label.model";
+import { MatchCsvRequest } from "../models/match-csv-request";
 import { Match } from "../models/match.model";
 import { Player, PlayerInterface } from "../models/player.model";
 import { MatchesService } from "../services/matches.service";
@@ -45,11 +46,11 @@ export class PlayerController {
     let matchesRequest$: Observable<any>[] = []
 
     if (!req.body.names) {
-      return res.status(500).json({})
+      return res.status(500).json(CONFIG.badRequestMessage)
     }
 
     if (req.body.names.length === 0) {
-      return res.status(500).json({})
+      return res.status(500).json(CONFIG.badRequestMessage)
     }
 
     req.body.names.forEach((name: string) => {
@@ -118,8 +119,8 @@ export class PlayerController {
   }
 
   getLastMatchRefList(req: Request, res: Response) {
-    let matchAmount = process.env.MATCH_AMOUNT ? +process.env.MATCH_AMOUNT : 0
-    return this.matchService.getLastMatchIdList(CONFIG.matchStartIndex, matchAmount, req.params.id).subscribe(
+    let m: MatchCsvRequest = new MatchCsvRequest()
+    return this.matchService.getLastMatchIdList(m, req.params.id).subscribe(
       player => res.status(200).json(player),
       error => res.status(500).json(error)
     )
@@ -133,9 +134,9 @@ export class PlayerController {
   }
 
   getObsMatchBySum(summoner: RiotGames.Summoner.SummonerDto, obsArray$: Observable<any>[]) {
+    let m: MatchCsvRequest = new MatchCsvRequest()
     return this.matchService.getLastMatchIdList(
-      CONFIG.matchStartIndex, 
-      +(process.env.MATCH_AMOUNT || 0), 
+      m,
       summoner.accountId
     ).pipe(
       pluck('matches'),
@@ -193,5 +194,14 @@ export class PlayerController {
       player.winrate = Math.round((100 * player.getWins()) / (player.getWins() + player.getLosses()) * 10) / 10
       player.labels = this.setPlayerLabels(player)
     });
+  }
+
+  getMatchesToCSV(req: Request, res: Response) {
+    let params: MatchCsvRequest
+    if (!req.body.name) {
+      res.status(500).json(CONFIG.badRequestMessage)
+    }
+    params = MatchCsvRequest.factory(req.body)
+    this.matchService.getMatchesToCSV(params).subscribe((matches: RiotGames.Match.MatchDetail[]) => res.status(200).json(matches))
   }
 }
