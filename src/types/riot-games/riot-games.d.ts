@@ -937,7 +937,7 @@ export declare namespace RiotGames {
       interface Player{
           matchHistoryUri: string,
           profileIcon: number,
-          summonerId: number,
+          summonerId: string,
           summonerName: string
       }
       interface BannedChampion{

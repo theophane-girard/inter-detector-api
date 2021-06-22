@@ -1,13 +1,14 @@
-import { forkJoin, Observable, of, Subject, throwError } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { CONFIG } from "../config/config";
-import { catchError, concatMap, map, mergeMap, pluck, switchMap } from "rxjs/operators";
-import { from } from 'rxjs';
+import { map, mergeMap, pluck, switchMap, take, tap } from "rxjs/operators";
 import { RiotGames } from "../types/riot-games/riot-games";
 import Axios from 'axios-observable';
 import { AxiosRequestConfig } from 'axios';
 import { MatchCsvRequest } from '../models/match-csv-request';
 import { MatchToCSV } from '../models/match-to-csv.model';
 import moment from 'moment';
+import { CoreService } from '../core/services/core.service';
+import { HttpRequestLog } from '../models/http-request-log';
 
 export class MatchesService {
   private api = Axios.create({
@@ -24,8 +25,8 @@ export class MatchesService {
       (error) => Promise.reject(error.response.data || error)
     );
     this.api.interceptors.request.use(
-      (request) => {
-        console.log(request);
+      (request: AxiosRequestConfig) => {
+        console.log(HttpRequestLog.factory(request))
         return request
       },
       (error) => Promise.reject(error.response.data || error)
@@ -34,27 +35,30 @@ export class MatchesService {
 
   getMatchesToCSV(params: MatchCsvRequest): Observable<RiotGames.Match.MatchDetail[]> {
     let matchesRequest$: Observable<any>[] = []
+    let sumId: string
     return this.getSummoner(params.name).pipe(
+      tap((sum: RiotGames.Summoner.SummonerDto) => sumId = sum.id),
       switchMap((data: RiotGames.Summoner.SummonerDto) => this.getLastMatchIdList(params, data.accountId)),
       pluck('matches'),
       mergeMap((match: RiotGames.MatchList.MatchReference[]) => match),
       switchMap((match: RiotGames.MatchList.MatchReference) => of(match)),
-      map((match: RiotGames.MatchList.MatchReference) => matchesRequest$.push(this.getMatchById(match.gameId))),
+      map((match: RiotGames.MatchList.MatchReference) => of(matchesRequest$.push(this.getMatchById(match.gameId)))),
       switchMap(() => forkJoin(matchesRequest$)),
-      map(matches => this.formatMatchToCsv(matches, params.name))
+      take(1),
+      map(matches => this.formatMatchToCsv(matches, sumId))
     )
   }
 
-  formatMatchToCsv(matches: any[], name: string): any {
-    return matches.map(match => {
-      let summonerToMap = match.participantIdentities.find(p => p.player.summonerName === name)
+  formatMatchToCsv(matches: any[], id: string): any {
+    return matches.map((match: RiotGames.Match.MatchDetail) => {
+      let summonerToMap = match.participantIdentities.find((p: RiotGames.Match.ParticipantIdentity) => p.player.summonerId + '' === id)
       let date = new Date(match.gameCreation)
-      let summonerParticipantId: number = summonerToMap.participantId
+      let summonerParticipantId: number = summonerToMap!.participantId
       let participant = match.participants.find(p => p.participantId === summonerParticipantId)
-      let win = match.teams.find(team => team.teamId === participant.teamId).win
+      let win = match.teams.find(team => team.teamId === participant!.teamId)!.win
 
       let matchToCSV: MatchToCSV = {
-        date: (moment(date)).format('dd/MM/yyyy'),
+        date: (moment(date)).format('DD/MM/yyyy'),
         day: CONFIG.daysOfWeek[date.getDay()],
         hour: (moment(date)).format('HH:mm:00'),
         win: this.formatWin(win),
@@ -81,25 +85,10 @@ export class MatchesService {
 
     let url = encodeURI(CONFIG.apiUrlMatchesByAccountId + id)
     let options: AxiosRequestConfig = {
-      params: {
-        'endIndex': params.endIndex,
-        'beginIndex': params.beginIndex,
-        'queue': CONFIG.rankedQueueId
-      }
+      params: CoreService.cleanNullAndUndefined(params)
     }
     return this.api.get(url, options).pipe(map(response => response.data))
   }
-
-  // getMatchListByChampId(id: number, account: any) {
-  //   let param = new HttpParams()
-  //   param = param.append('queue', `${CONFIG.rankedQueueId}`)
-  //   param = param.append('champion', id)
-
-  //   let url = CONFIG.apiUrlMatchesByAccountId 
-  //     + account.accountId
-
-  //   return this.http.get<RiotGames.MatchList.MatchList>(url, { params: param })
-  // }
 
   getMatchById(id: any): Observable<RiotGames.Match.MatchDetail> {
     let url = encodeURI(CONFIG.apiUrlMatchesById + id)
