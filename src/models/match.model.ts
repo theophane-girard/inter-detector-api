@@ -1,6 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { CONFIG } from "../config/config";
-import { database } from "../config/database";
+// import { database } from "../config/database";
 import { RiotGames } from "../types/riot-games/riot-games";
 
 export class Match implements RiotGames.Match.MatchDetail {

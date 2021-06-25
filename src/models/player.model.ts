@@ -1,4 +1,4 @@
-import { database } from "../config/database";
+// import { database } from "../config/database";
 import { Sequelize, DataTypes, BuildOptions, Model } from "sequelize";
 import { CoreService } from "../core/services/core.service";
 import { RiotGames } from "../types/riot-games/riot-games";

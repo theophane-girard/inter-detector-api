@@ -23,9 +23,7 @@
     "moment": "^2.29.1",
     "riot-lol-api": "^4.3.3",
     "rxjs": "^7.1.0",
-    "sequelize": "^6.6.2",
-    "sqlite": "^4.0.23",
-    "sqlite3": "^5.0.2"
+    "sequelize": "^6.6.2"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.35",

@@ -22,6 +22,7 @@ export class PlayerController {
     // Player.findAll<Player>({})
     //   .then((players: Array<Player>) => res.json(players))
     //   .catch((err: Error) => res.status(500).json(err));
+    res.json(true)
   }
 
   public create(req: Request, res: Response) {
@@ -30,6 +31,7 @@ export class PlayerController {
     // Player.create<Player>(params)
     //   .then((player: Player) => res.status(201).json(player))
     //   .catch((err: Error) => res.status(500).json(err));
+    res.json(true)
   }
 
   public getSummonerByName(req: Request, res: Response) {

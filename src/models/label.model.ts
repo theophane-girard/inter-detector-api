@@ -1,5 +1,5 @@
 import { CONFIG } from "../config/config"
-import { database } from "../config/database"
+// import { database } from "../config/database"
 
 export class Label {
   // public id!: number
