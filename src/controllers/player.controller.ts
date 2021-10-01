@@ -2,20 +2,26 @@ import { Request, Response } from "express";
 import { forkJoin, Observable, of } from "rxjs";
 import { map, mergeMap, switchMap, tap, pluck, catchError, take } from "rxjs/operators";
 import { CONFIG } from "../config/config";
+import { DecayParam } from "../models/decay-request";
 import { Label } from "../models/label.model";
 import { MatchCsvRequest } from "../models/match-csv-request";
 import { Match } from "../models/match.model";
 import { Player, PlayerInterface } from "../models/player.model";
 import { MatchesService } from "../services/matches.service";
+import { SummonersService } from "../services/summoners.service";
 import { RiotGames } from "../types/riot-games/riot-games";
+import { Service, Inject } from 'typedi';
+import 'reflect-metadata';
 
+@Service()
 export class PlayerController {
 
   /**
    *
    */
   constructor(
-    private matchService: MatchesService
+    private matchService: MatchesService,
+    private sumService: SummonersService
   ) {
   }
   public index(req: Request, res: Response) {
@@ -35,7 +41,7 @@ export class PlayerController {
   }
 
   public getSummonerByName(req: Request, res: Response) {
-    return this.matchService.getSummoner(req.params.name).subscribe(
+    return this.sumService.getSummoner(req.params.name).subscribe(
       player => res.status(200).json(player),
       error => res.status(500).json(error.status)
     )
@@ -56,7 +62,7 @@ export class PlayerController {
     }
 
     req.body.names.forEach((name: string) => {
-      let playerRequest$ = this.matchService.getSummoner(name).pipe(
+      let playerRequest$ = this.sumService.getSummoner(name).pipe(
         switchMap((summoner: RiotGames.Summoner.SummonerDto) => of(players.push(Player.factory(summoner)))),
         catchError(err => of(err))
       )
@@ -67,7 +73,7 @@ export class PlayerController {
       take(1),
       mergeMap((summoners: any[]) => players),
       map((summoner: RiotGames.Summoner.SummonerDto) => matchRefAndLeagueRequest$.push(
-        this.matchService.getSummonerLeague(summoner.id), 
+        this.sumService.getSummonerLeague(summoner.id), 
         this.getObsMatchBySum(summoner, matchesRequest$))
       ),
       switchMap((data) => forkJoin(matchRefAndLeagueRequest$)),
@@ -83,11 +89,6 @@ export class PlayerController {
       },
       error => res.status(error.status.status_code).json(error.status)
     )
-  }
-
-  getMatchesFromMatchRef(matches: any): Observable<RiotGames.MatchList.MatchReference> {
-    let res: any = matches.matches
-    return of(res)
   }
 
   setPlayerLabels(player: Player) : Label[] {
@@ -117,7 +118,7 @@ export class PlayerController {
   }
 
   getSummonerLeague(req: Request, res: Response) {
-    return this.matchService.getSummonerLeague(req.params.id).subscribe(
+    return this.sumService.getSummonerLeague(req.params.id).subscribe(
       player => res.status(200).json(player),
       error => res.status(500).json(error)
     )
@@ -132,7 +133,7 @@ export class PlayerController {
   }
 
   getMatchById(req: Request, res: Response) {
-    return this.matchService.getMatchById(+req.params.id).subscribe(
+    return this.matchService.getMatchById(req.params.id).subscribe(
       player => res.status(200).json(player),
       error => res.status(500).json(error)
     )
@@ -144,9 +145,8 @@ export class PlayerController {
       m,
       summoner.accountId
     ).pipe(
-      pluck('matches'),
-      mergeMap((match: RiotGames.MatchList.MatchReference[]) => match),
-      switchMap((match: RiotGames.MatchList.MatchReference) => of(obsArray$.push(this.getMatchDetailObs(match, summoner.id)))),
+      mergeMap((matches: string[]) => matches),
+      switchMap((match: string) => of(obsArray$.push(this.getMatchDetailObs(match, summoner.id)))),
     )
   }
 
@@ -177,13 +177,13 @@ export class PlayerController {
     });
   }
 
-  getMatchDetailObs(game: RiotGames.MatchList.MatchReference, id: string) {
-    return this.matchService.getMatchById(game.gameId).pipe(map(match => {
+  getMatchDetailObs(game: string, id: string) {
+    return this.matchService.getMatchById(game).pipe(map(match => {
       let m = Match.factory(match)
       m.summonerId = id
-      m.role = game.role
-      m.champion = game.champion
-      m.lane = game.lane
+      // m.role = game.role
+      // m.champion = game.champion
+      // m.lane = game.lane
       return m
     }))
   }
@@ -212,4 +212,24 @@ export class PlayerController {
       error => res.status(error.status.status_code).json(error.status)
     )
   }
+
+  getDecayCountDownIframe(req: Request, res: Response) {
+    if (!req.body.name) {
+      res.status(500).json(CONFIG.badRequestMessage)
+    }
+    if (!req.body.startTime) {
+      res.status(500).json(CONFIG.badRequestMessage)
+    }
+    if (!req.body.bankDays) {
+      res.status(500).json(CONFIG.badRequestMessage)
+    }
+    this.sumService.getSummonerDecayCountDown(req.body).subscribe(
+      (date: Date) => res.status(200).json(date.getTime()),
+      error => res.status(error.status.status_code).json(error.status)
+    )
+  }
+}
+
+function Intect() {
+  throw new Error("Function not implemented.");
 }

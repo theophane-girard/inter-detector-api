@@ -17,7 +17,8 @@ class App {
     const allowedOrigins = [
       'http://localhost:5000',
       'http://localhost:4200',
-      'https://inter-detector.web.app'
+      'https://inter-detector.web.app',
+      'https://apption.co'
     ];
 
     const options: cors.CorsOptions = {

@@ -1,6 +1,6 @@
 import { forkJoin, Observable, of } from 'rxjs';
 import { CONFIG } from "../config/config";
-import { map, mergeMap, pluck, switchMap, take, tap } from "rxjs/operators";
+import { map, mergeMap, switchMap, take, tap } from "rxjs/operators";
 import { RiotGames } from "../types/riot-games/riot-games";
 import Axios from 'axios-observable';
 import { AxiosRequestConfig } from 'axios';
@@ -9,56 +9,40 @@ import { MatchToCSV } from '../models/match-to-csv.model';
 import moment from 'moment';
 import { CoreService } from '../core/services/core.service';
 import { HttpRequestLog } from '../models/http-request-log';
+import { RiotService } from './riot.service';
+import { SummonersService } from './summoners.service';
+import { Service, Inject } from 'typedi';
+import 'reflect-metadata';
+@Service()
+export class MatchesService extends RiotService {
 
-export class MatchesService {
-  private api = Axios.create({
-    baseURL: CONFIG.apiUrl,
-    headers: {
-      'X-Riot-Token': process.env.RIOT_API_KEY,
-      'Content-Type': 'application/json',
-    }
-  });
-
-  constructor() {
-    this.api.interceptors.response.use(
-      (response) => response,
-      (error) => Promise.reject(error.response.data || error)
-    );
-    this.api.interceptors.request.use(
-      (request: AxiosRequestConfig) => {
-        console.log(HttpRequestLog.factory(request))
-        return request
-      },
-      (error) => Promise.reject(error.response.data || error)
-    );
+  constructor(private sumService: SummonersService) {
+    super()
   }
 
   getMatchesToCSV(params: MatchCsvRequest): Observable<RiotGames.Match.MatchDetail[]> {
     let matchesRequest$: Observable<any>[] = []
     let sumId: string
-    return this.getSummoner(params.name).pipe(
+    return this.sumService.getSummoner(params.name).pipe(
       tap((sum: RiotGames.Summoner.SummonerDto) => sumId = sum.id),
-      switchMap((data: RiotGames.Summoner.SummonerDto) => this.getLastMatchIdList(params, data.accountId)),
-      pluck('matches'),
-      mergeMap((match: RiotGames.MatchList.MatchReference[]) => match),
-      switchMap((match: RiotGames.MatchList.MatchReference) => of(match)),
-      map((match: RiotGames.MatchList.MatchReference) => of(matchesRequest$.push(this.getMatchById(match.gameId)))),
+      switchMap((data: RiotGames.Summoner.SummonerDto) => this.getLastMatchIdList(params, data.puuid)),
+      mergeMap((matches: string[]) => matches),
+      switchMap((match: string) => of(match)),
+      map((match: string) => of(matchesRequest$.push(this.getMatchById(match)))),
       switchMap(() => forkJoin(matchesRequest$)),
       take(1),
-      map(matches => this.formatMatchToCsv(matches, sumId))
+      map((matches: any[]) => this.formatMatchToCsv(matches, sumId))
     )
   }
 
-  formatMatchToCsv(matches: any[], id: string): any {
-    return matches.map((match: RiotGames.Match.MatchDetail) => {
-      let summonerToMap = match.participantIdentities.find((p: RiotGames.Match.ParticipantIdentity) => p.player.summonerId + '' === id)
-      let date = new Date(match.gameCreation)
-      let summonerParticipantId: number = summonerToMap!.participantId
-      let participant = match.participants.find(p => p.participantId === summonerParticipantId)
-      let win = match.teams.find(team => team.teamId === participant!.teamId)!.win
+  formatMatchToCsv(matches: RiotGames.Match.MatchDto[], id: string): any {
+    return matches.map((match: RiotGames.Match.MatchDto) => {
+      let summonerToMap = match.info.participants.find((p: RiotGames.Match.ParticipantDto) => p.summonerId + '' === id)
+      let date = new Date(match.info.gameCreation)
+      let win: boolean|undefined = summonerToMap?.win
 
       let matchToCSV: MatchToCSV = {
-        date: (moment(date)).format('DD/MM/yyyy'),
+        date: date.toString(),
         day: CONFIG.daysOfWeek[date.getDay()],
         hour: (moment(date)).format('HH:mm:00'),
         win: this.formatWin(win),
@@ -66,11 +50,15 @@ export class MatchesService {
       }
       return matchToCSV
     }).sort((a, b)=> this.sortByDateAndGameNumber(a, b))
+    .map(match => {
+      match.date = moment(new Date(match.date)).format('DD/MM/yyyy')
+      return match
+    })
   }
 
   sortByDateAndGameNumber(a, b) {
-    let o1 = a.date;
-    let o2 = b.date;
+    let o1 = new Date(a.date).getTime();
+    let o2 = new Date(b.date).getTime();
     let p1 = a.gameNumber;
     let p2 = b.gameNumber;
 
@@ -81,41 +69,41 @@ export class MatchesService {
     return 0;
   }
 
-  getLastMatchIdList(params: MatchCsvRequest, id: string): Observable<RiotGames.MatchList.MatchList> {
+  /**
+   * 
+   * @param params MatchCsvRequest
+   * @param id accountId
+   * @returns 
+   */
+  getLastMatchIdList(params: MatchCsvRequest, id: string): Observable<string[]> {
 
-    let url = encodeURI(CONFIG.apiUrlMatchesByAccountId + id)
+    let url = encodeURI(CONFIG.apiUrlMatchesByPuuidPrefix + id + CONFIG.apiUrlMatchesByPuuidSuffix)
     let options: AxiosRequestConfig = {
-      params: CoreService.cleanNullAndUndefined(params)
+      params: CoreService.cleanNullAndUndefined(params),
+      baseURL: CONFIG.apiV5Base + CONFIG.apiUrl
     }
-    return this.api.get(url, options).pipe(map(response => response.data))
+    return this.api.get(url, options).pipe(map((response: any) => response.data))
   }
 
-  getMatchById(id: any): Observable<RiotGames.Match.MatchDetail> {
+  getMatchById(id: string): Observable<RiotGames.Match.MatchDto> {
     let url = encodeURI(CONFIG.apiUrlMatchesById + id)
-    return this.api.get(url).pipe(map(response => response.data))
+    let options: AxiosRequestConfig = {
+      baseURL: CONFIG.apiV5Base + CONFIG.apiUrl
+    }
+    return this.api.get(url, options).pipe(map((response: any) => response.data))
   }
 
-  getSummoner(summonerName: string) {
-    let url = encodeURI(CONFIG.apiUrlGetSummoner + summonerName)
-    return this.api.get(url).pipe(map(response => response.data))
-  }
-
-  getSummonerLeague(id: string): Observable<RiotGames.League.LeagueDto[]> {
-    let url = encodeURI(CONFIG.apiUrlGetSummonerLeague + id)
-    return this.api.get(url).pipe(map(response => response.data))
-  }
-
-  formatWin(winner: string): string {
-    return CONFIG.win[winner].label
+  formatWin(win: boolean|undefined): string {
+    return win ? CONFIG.win['Win'].label : CONFIG.win['Fail'].label
   }
 
   getGameNumber(
-    match: RiotGames.Match.MatchDetail, 
-    matches: RiotGames.Match.MatchDetail[], 
+    match: RiotGames.Match.MatchDto, 
+    matches: RiotGames.Match.MatchDto[], 
     date: Date
   ): number {
-    let dayMatches = matches.filter(m => (new Date(m.gameCreation)).getDate() === date.getDate())
-    dayMatches = dayMatches.sort((a, b) => a.gameCreation - b.gameCreation)
+    let dayMatches = matches.filter(m => (new Date(m.info.gameCreation)).getDate() === date.getDate())
+    dayMatches = dayMatches.sort((a, b) => a.info.gameCreation - b.info.gameCreation)
     return dayMatches.indexOf(match) + 1
   }
 }

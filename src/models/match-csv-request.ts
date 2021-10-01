@@ -7,9 +7,9 @@ export class MatchCsvRequest {
     public queue: number = CONFIG.rankedQueueId,
     public season?: number,
     public endTime?: any,
-    public beginTime?: any,
-    public endIndex: number = +(process.env.MATCH_AMOUNT || 0),
-    public beginIndex: number = CONFIG.matchStartIndex,
+    public startTime?: any,
+    public count?: number,
+    public start: number = CONFIG.matchStartIndex,
     public name: string = ''
   ) {}
 
@@ -20,15 +20,15 @@ export class MatchCsvRequest {
         m[key] = obj[key];
       }
     }
-    if (m.beginTime) {
-      if (CoreService.isValidDate(new Date(m.beginTime!))) {
-        m.beginTime = +new Date(m.beginTime!)
+    if (m.startTime) {
+      if (CoreService.isValidDate(new Date(m.startTime!))) {
+        m.startTime = +new Date(m.startTime!) / 100000
       }
     }
 
     if (m.endTime) {
       if (CoreService.isValidDate(new Date(m.endTime!))) {
-        m.endTime = +new Date(m.endTime!)
+        m.endTime = +new Date(m.endTime!) / 100000
       }
     }
 
