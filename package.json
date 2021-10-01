@@ -21,9 +21,11 @@
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "moment": "^2.29.1",
+    "reflect-metadata": "^0.1.13",
     "riot-lol-api": "^4.3.3",
     "rxjs": "^7.1.0",
-    "sequelize": "^6.6.2"
+    "sequelize": "^6.6.2",
+    "typedi": "^0.10.0"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.35",
