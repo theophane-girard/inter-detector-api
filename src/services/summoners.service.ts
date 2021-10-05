@@ -42,9 +42,9 @@ export class SummonersService extends RiotService {
   getDecayDateFromLastGame(matches: string[], params: DecayParam): Observable<Date> {
     let today: Date = new Date()
     let givenLastGamePlayedDate: Date = new Date(+params.startTime * 1000)
-    let dayDiff: number = Math.floor((today.getTime() - givenLastGamePlayedDate.getTime())/(24*3600*1000));
-    let bankDays: number = (params.bankDays + matches.length * CONFIG.bankDaysPerGame) - dayDiff
+    let timeDiff: number = today.getTime() - givenLastGamePlayedDate.getTime();
+    let bankDays: number = (params.bankDays + matches.length * CONFIG.bankDaysPerGame)
     let result: Date = new Date(today.setDate(today.getDate() + bankDays))
-    return of(result)
+    return of(new Date(result.setTime(result.getTime() - timeDiff)))
   }
 }

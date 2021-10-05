@@ -27,6 +27,6 @@ export class Routes {
     app.route("/summoners/matches/csv")
       .post(this.playerController.getMatchesToCSV.bind(this.playerController))
     app.route("/summoners/decay-date")
-      .post(this.playerController.getDecayCountDownIframe.bind(this.playerController))
+      .post(this.playerController.getDecayCountDownDate.bind(this.playerController))
   }
 }
