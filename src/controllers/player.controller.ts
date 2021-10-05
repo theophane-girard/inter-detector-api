@@ -213,7 +213,7 @@ export class PlayerController {
     )
   }
 
-  getDecayCountDownIframe(req: Request, res: Response) {
+  getDecayCountDownDate(req: Request, res: Response) {
     if (!req.body.name) {
       res.status(500).json(CONFIG.badRequestMessage)
     }
@@ -228,8 +228,4 @@ export class PlayerController {
       error => res.status(error.status.status_code).json(error.status)
     )
   }
-}
-
-function Intect() {
-  throw new Error("Function not implemented.");
 }
